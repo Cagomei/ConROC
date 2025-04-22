@@ -800,60 +800,23 @@ function ConROC:IsMeleeRange()
 end
 
 function ConROC:IsSpellInRange(spellid, target_unit)
-	local unit = target_unit or 'target';
-	local range = false;
-	local known = IsPlayerSpell(spellid);
+	local unit = target_unit or 'target'
+	local range = false
+
+	-- Check if the player knows the spell
+	local known = IsPlayerSpell(spellid)
 
 	if known and ConROC:TarHostile() then
-		-- Use C_Spell.IsSpellInRange instead of IsSpellInRange
-		local inRange = C_Spell.IsSpellInRange(spellid, unit);
+		-- Get the spell name using the spell ID
+		local spellName = GetSpellInfo(spellid)
 
-		if inRange == nil then
-			local myIndex = nil
-            local skillLineInfo = C_SpellBook.GetSpellBookSkillLineInfo(2) -- Get skill line info for the second tab
-
-            if skillLineInfo then
-                local offset = skillLineInfo.itemIndexOffset
-                local numSpells = skillLineInfo.numSpellBookItems
-                local booktype = Enum.SpellBookSpellBank.Player
-
-                if offset and numSpells then
-					for index = offset + 1, numSpells + offset do
-						local spellBookInfo = C_SpellBook.GetSpellBookItemInfo(index, booktype)
-                        if spellBookInfo and spellid == spellBookInfo.spellID then
-                            myIndex = index
-                            break
-						end
-					end
-				end
-			else
-                -- Handle case where skillLineInfo is nil
-                print("Error: Unable to retrieve skill line information.")
-            end
-
-			local numPetSpells, _ = C_SpellBook.HasPetSpells()
-            if not myIndex and numPetSpells then
-                local booktype = Enum.SpellBookSpellBank.Pet
-				for index = 1, numPetSpells do
-					local spellBookInfo = C_SpellBook.GetSpellBookItemInfo(index, booktype)
-                    if spellBookInfo and spellid == spellBookInfo.spellID then
-                        myIndex = index
-                        break
-					end
-				end
-			end
-
-			if myIndex then
-				inRange = C_Spell.IsSpellInRange(myIndex, unit)
-            end
+		if spellName then
+			local inRange = IsSpellInRange(spellName, unit)
+			range = inRange == 1 -- In Classic, IsSpellInRange returns 1 (in range), 0 (out of range), or nil
 		end
+	end
 
-		if inRange == true then
-            range = true
-        end
-    end
-
-  return range;
+	return range
 end
 
 function ConROC:AbilityReady(spellid, timeShift, spelltype)
